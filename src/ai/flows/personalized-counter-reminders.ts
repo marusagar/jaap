@@ -3,29 +3,15 @@
  * @fileOverview A Genkit flow for intelligently generating personalized counter reminders.
  *
  * - personalizeCounterReminder - A function that generates a personalized reminder for the user's Jap Counter.
- * - PersonalizeCounterReminderInput - The input type for the personalizeCounterReminder function.
- * - PersonalizeCounterReminderOutput - The return type for the personalizeCounterReminder function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-
-const PersonalizeCounterReminderInputSchema = z.object({
-  userId: z.string().describe('The ID of the user.'),
-  currentCount: z.number().describe('The user\'s current counter value.'),
-  targetGoal: z.number().describe('The user\'s set target goal (e.g., 108, 1008).'),
-  hoursSinceLastActivity: z.number().min(0).describe('The number of hours since the user\'s last interaction with the counter.'),
-  notificationPreference: z.enum(['subtle', 'regular', 'urgent', 'none']).describe('The user\'s preferred notification frequency.'),
-  timeOfDayDescription: z.string().describe('A descriptive string of the current time of day (e.g., "morning", "afternoon", "evening", "late night").'),
-});
-export type PersonalizeCounterReminderInput = z.infer<typeof PersonalizeCounterReminderInputSchema>;
-
-const PersonalizeCounterReminderOutputSchema = z.object({
-  shouldSendReminder: z.boolean().describe('True if a reminder should be sent, false otherwise.'),
-  reminderMessage: z.string().optional().describe('The personalized reminder message to send, if shouldSendReminder is true.'),
-  suggestedFrequencyAdjustment: z.enum(['increase', 'decrease', 'keep_same', 'none']).optional().describe('A suggestion for adjusting the user\'s notification frequency based on their recent activity.'),
-});
-export type PersonalizeCounterReminderOutput = z.infer<typeof PersonalizeCounterReminderOutputSchema>;
+import {
+  PersonalizeCounterReminderInputSchema,
+  type PersonalizeCounterReminderInput,
+  PersonalizeCounterReminderOutputSchema,
+  type PersonalizeCounterReminderOutput,
+} from '@/lib/types';
 
 export async function personalizeCounterReminder(input: PersonalizeCounterReminderInput): Promise<PersonalizeCounterReminderOutput> {
   return personalizeCounterReminderFlow(input);

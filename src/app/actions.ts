@@ -1,7 +1,8 @@
 'use server';
 
-import { personalizeCounterReminder, type PersonalizeCounterReminderInput } from '@/ai/flows/personalized-counter-reminders';
-import { summarizeHistory, type SummarizeHistoryInput } from '@/ai/flows/summarize-history';
+import { personalizeCounterReminder } from '@/ai/flows/personalized-counter-reminders';
+import { summarizeHistory } from '@/ai/flows/summarize-history';
+import type { PersonalizeCounterReminderInput, SummarizeHistoryInput } from '@/lib/types';
 
 function checkApiKey() {
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "REPLACE_WITH_YOUR_GOOGLE_AI_API_KEY") {

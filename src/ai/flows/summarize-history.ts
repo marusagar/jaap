@@ -3,28 +3,15 @@
  * @fileOverview A Genkit flow for summarizing a user's counter history.
  *
  * - summarizeHistory - A function that generates a personalized summary of the user's practice.
- * - SummarizeHistoryInput - The input type for the summarizeHistory function.
- * - SummarizeHistoryOutput - The return type for the summarizeHistory function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-
-const HistoryEntrySchema = z.object({
-  date: z.string().describe("The date of the session."),
-  count: z.number().describe("The number of repetitions in that session."),
-});
-
-const SummarizeHistoryInputSchema = z.object({
-  history: z.array(HistoryEntrySchema).describe("An array of the user's recent counting sessions."),
-  userName: z.string().optional().describe("The user's name, for personalization."),
-});
-export type SummarizeHistoryInput = z.infer<typeof SummarizeHistoryInputSchema>;
-
-const SummarizeHistoryOutputSchema = z.object({
-  summary: z.string().describe("A short, encouraging, and personalized summary of the user's practice based on their history. Address the user directly if their name is provided."),
-});
-export type SummarizeHistoryOutput = z.infer<typeof SummarizeHistoryOutputSchema>;
+import {
+  SummarizeHistoryInputSchema,
+  type SummarizeHistoryInput,
+  SummarizeHistoryOutputSchema,
+  type SummarizeHistoryOutput,
+} from '@/lib/types';
 
 export async function summarizeHistory(input: SummarizeHistoryInput): Promise<SummarizeHistoryOutput> {
   return summarizeHistoryFlow(input);
