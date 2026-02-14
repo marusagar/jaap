@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,7 +7,7 @@ import { ChevronsLeft, ChevronsRight, PanelLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { LotusIcon } from '../icons';
 import type { User } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
@@ -212,6 +211,7 @@ export function SidebarTrigger({ children, className }: { children: React.ReactN
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col p-0 w-64">
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SidebarHeader className="justify-start px-4">
           <SidebarBrand href="/dashboard" />
         </SidebarHeader>
