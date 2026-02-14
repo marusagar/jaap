@@ -237,7 +237,7 @@ export function SidebarTrigger({ children, className }: { children: React.ReactN
       <SheetContent side="left" className="flex flex-col p-0 w-64">
         <SheetTitle>Navigation Menu</SheetTitle>
         <SidebarHeader className="justify-start px-4">
-          <SidebarBrand href="/dashboard" />
+          <SidebarBrand href="/app" />
         </SidebarHeader>
         <SidebarContent>
           {childrenWithProps}

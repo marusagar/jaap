@@ -26,7 +26,7 @@ export function GoogleSignInButton() {
       if(result.user.metadata.creationTime === result.user.metadata.lastSignInTime) {
         await initializeNewUser(db, result.user);
       }
-      router.push('/dashboard');
+      router.push('/app');
     } catch (error: any) {
       // Don't show an error toast if the user simply closes the popup.
       if (error.code !== 'auth/popup-closed-by-user') {

@@ -39,9 +39,9 @@ export function DashboardLayoutClient({
   };
 
   const navItems = [
-    { href: '/dashboard', label: 'Counter', icon: Home },
-    { href: '/dashboard/history', label: 'History', icon: History },
-    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    { href: '/app', label: 'Counter', icon: Home },
+    { href: '/app/history', label: 'History', icon: History },
+    { href: '/app/settings', label: 'Settings', icon: Settings },
   ];
 
   if (isUserLoading || !user) {
@@ -57,7 +57,7 @@ export function DashboardLayoutClient({
       <div className="flex min-h-screen">
         <Sidebar>
           <SidebarHeader>
-            <SidebarBrand href="/dashboard" />
+            <SidebarBrand href="/app" />
             <SidebarCollapse />
           </SidebarHeader>
           <SidebarContent>

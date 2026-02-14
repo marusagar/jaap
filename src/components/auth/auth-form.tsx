@@ -74,7 +74,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
-      router.push('/dashboard');
+      router.push('/app');
     } catch (error: any) {
       toast({
         variant: 'destructive',

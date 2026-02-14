@@ -1,3 +1,5 @@
+'use client';
+
 import { CounterClient } from '@/components/counter-client';
 import { Card, CardContent } from '@/components/ui/card';
 
