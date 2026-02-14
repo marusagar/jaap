@@ -28,11 +28,14 @@ export function GoogleSignInButton() {
       }
       router.push('/dashboard');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Sign-In Error',
-        description: error.message || 'Could not sign in with Google.',
-      });
+      // Don't show an error toast if the user simply closes the popup.
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: 'destructive',
+          title: 'Google Sign-In Error',
+          description: error.message || 'Could not sign in with Google.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
