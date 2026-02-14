@@ -161,6 +161,31 @@ export function SidebarMenuButton({
   );
 }
 
+export function SidebarActionButton({
+  icon: Icon,
+  children,
+  onClick,
+}: {
+  icon: React.ElementType;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  const { isCollapsed } = useSidebar();
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary w-full',
+        isCollapsed && 'justify-center'
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      {!isCollapsed && <span className="flex-1 truncate text-left">{children}</span>}
+      {isCollapsed && <span className="sr-only">{children}</span>}
+    </button>
+  );
+}
+
 export function SidebarProfile({ user }: { user: User }) {
     const { isCollapsed } = useSidebar();
 
@@ -183,7 +208,6 @@ export function SidebarProfile({ user }: { user: User }) {
                     <p className="truncate text-sm font-medium">{user.email}</p>
                 </div>
             )}
-            {!isCollapsed && <ChevronsRight className="h-4 w-4 text-muted-foreground" />}
         </div>
     );
 }
@@ -211,7 +235,7 @@ export function SidebarTrigger({ children, className }: { children: React.ReactN
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col p-0 w-64">
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+        <SheetTitle>Navigation Menu</SheetTitle>
         <SidebarHeader className="justify-start px-4">
           <SidebarBrand href="/dashboard" />
         </SidebarHeader>

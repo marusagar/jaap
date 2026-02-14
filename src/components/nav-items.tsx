@@ -2,8 +2,9 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarActionButton } from '@/components/ui/sidebar';
 import type { LucideIcon } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 type NavItem = {
   href: string;
@@ -14,10 +15,20 @@ type NavItem = {
 type NavItemsProps = {
   items: NavItem[];
   onLinkClick?: () => void;
+  onLogoutClick?: () => void;
 };
 
-export function NavItems({ items, onLinkClick }: NavItemsProps) {
+export function NavItems({ items, onLinkClick, onLogoutClick }: NavItemsProps) {
   const pathname = usePathname();
+
+  const handleLogout = () => {
+    if (onLinkClick) {
+      onLinkClick();
+    }
+    if (onLogoutClick) {
+      onLogoutClick();
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -33,6 +44,13 @@ export function NavItems({ items, onLinkClick }: NavItemsProps) {
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
+      {onLogoutClick && (
+        <SidebarMenuItem>
+          <SidebarActionButton icon={LogOut} onClick={handleLogout}>
+            Log Out
+          </SidebarActionButton>
+        </SidebarMenuItem>
+      )}
     </SidebarMenu>
   );
 }

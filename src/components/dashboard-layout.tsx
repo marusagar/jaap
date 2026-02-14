@@ -14,15 +14,7 @@ import {
   SidebarProfile,
   SidebarCollapse,
 } from '@/components/ui/sidebar';
-import { Home, Settings, History, LogOut, Loader2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+import { Home, Settings, History, Loader2 } from 'lucide-react';
 import { NavItems } from './nav-items';
 
 export function DashboardLayoutClient({
@@ -69,36 +61,19 @@ export function DashboardLayoutClient({
             <SidebarCollapse />
           </SidebarHeader>
           <SidebarContent>
-            <NavItems items={navItems} />
+            <NavItems items={navItems} onLogoutClick={handleLogout} />
           </SidebarContent>
           <SidebarFooter>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full rounded-lg hover:bg-muted p-1">
-                  <SidebarProfile user={user} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+             <div className="w-full rounded-lg p-1">
+                <SidebarProfile user={user} />
+            </div>
           </SidebarFooter>
         </Sidebar>
 
         <main className="flex-1 flex flex-col">
           <header className="flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
             <SidebarTrigger>
-              <NavItems items={navItems} />
+              <NavItems items={navItems} onLogoutClick={handleLogout} />
             </SidebarTrigger>
             <div className="w-full flex-1">
               <h1 className="text-lg font-semibold md:text-xl font-headline">
