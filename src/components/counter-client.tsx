@@ -6,7 +6,7 @@ import { doc } from 'firebase/firestore';
 import type { UserData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Minus, Plus, RotateCcw, Loader2, Target } from 'lucide-react';
+import { Plus, RotateCcw, Loader2, Target } from 'lucide-react';
 import {
   addHistoryEntry,
   updateUserCounter,
@@ -67,10 +67,8 @@ export function CounterClient() {
   );
 
 
-  const handleInteraction = (type: 'increment' | 'decrement') => {
-    const newCount = type === 'increment' ? localCount + 1 : localCount - 1;
-    if (newCount < 0) return;
-
+  const handleIncrement = () => {
+    const newCount = localCount + 1;
     setLocalCount(newCount);
     if (user) {
       debouncedUpdate(user.uid, newCount);
@@ -93,7 +91,7 @@ export function CounterClient() {
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(type === 'increment' ? 800 : 600, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
         gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
         oscillator.start(audioContext.currentTime);
@@ -189,19 +187,9 @@ export function CounterClient() {
 
       <div className="flex items-center justify-center gap-6 w-full max-w-md my-8">
         <Button
-          variant="outline"
-          size="icon"
-          className="h-20 w-20 rounded-full border-2 active:scale-95 transition-transform"
-          onClick={() => handleInteraction('decrement')}
-          aria-label="Decrement count"
-          disabled={localCount === 0}
-        >
-          <Minus className="h-8 w-8" />
-        </Button>
-        <Button
           size="icon"
           className="h-32 w-32 rounded-full shadow-lg active:scale-95 transition-transform bg-primary hover:bg-primary/90"
-          onClick={() => handleInteraction('increment')}
+          onClick={handleIncrement}
           aria-label="Increment count"
         >
           <Plus className="h-12 w-12" />
