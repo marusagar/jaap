@@ -1,10 +1,8 @@
-
-import { DashboardLayoutClient } from '@/components/dashboard-layout';
-
-export default function DashboardLayout({
+// This file is intentionally left empty to resolve a route conflict.
+export default function EmptyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayoutClient>{children}</DashboardLayoutClient>;
+  return <>{children}</>;
 }
