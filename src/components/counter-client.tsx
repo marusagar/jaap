@@ -6,7 +6,7 @@ import { doc } from 'firebase/firestore';
 import type { UserData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Plus, RotateCcw, Loader2, Target } from 'lucide-react';
+import { RotateCcw, Loader2, Target } from 'lucide-react';
 import {
   addHistoryEntry,
   updateUserCounter,
@@ -192,7 +192,7 @@ export function CounterClient() {
           onClick={handleIncrement}
           aria-label="Increment count"
         >
-          <Plus className="h-16 w-16" />
+          <span className="text-5xl font-bold">JAP</span>
         </Button>
         <Button
           variant="outline"
