@@ -1,0 +1,102 @@
+/**
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. All data is partitioned
+ * into user-specific document trees, ensuring that a user can only ever access
+ * their own information. Unauthenticated access is completely disallowed. The
+ * primary goal is to provide strong data privacy and isolation between users.
+ *
+ * Data Structure:
+ * The data is organized hierarchically under the `/users/{userId}` collection.
+ * Each user has a root document containing their primary counter data. Nested
+ * under this document is a `history` subcollection which stores timestamped
+ * records of their counter progress. This structure makes ownership clear from
+ * the path itself.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All paths are closed by default. Access is only granted
+ *   through explicit `allow` statements.
+ * - No User Listing: It is not possible to list documents in the top-level
+ *   `/users` collection, preventing enumeration of all application users.
+ * - Strict Ownership: All operations (read, write, delete) are gated by a
+ *   check that ensures the requesting user's ID matches the `userId` in the
+ *   document path.
+ * - Server-Side Focus: These rules are for server-side authorization. They
+ *   cannot fix client-side configuration issues such as an 'invalid-api-key'
+ *   error, which must be resolved in the application's Firebase configuration.
+ *
+ * Denormalization for Authorization:
+ * To ensure rules are fast and efficient, the `userId` is denormalized and
+ * stored inside each `history` entry document. This allows a security rule to
+ * validate ownership directly from the document's data without needing to
+ * perform a costly `get` operation on the parent user document. This is a
+ * critical performance and security pattern.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for reusable logic
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the requesting user is the owner of the document based on the path.
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Checks for ownership on an existing document, used for update/delete.
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description
+     *   Rules for a user's primary counter data document. This document holds
+     *   the main state of the user's counter.
+     * @path
+     *   /users/{userId}
+     * @allow
+     *   A signed-in user (create)s their own user document:
+     *   `auth.uid: "user_abc"`, `path: /users/user_abc`
+     * @deny
+     *   An anonymous user attempts to (get) a user's document:
+     *   `auth.uid: null`, `path: /users/user_abc`
+     * @principle
+     *   Restricts access to a user's own data tree and allows a user to create
+     *   their own root document.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disallow listing of all user documents for privacy.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description
+       *   Rules for a user's counter history. Each document is a snapshot of
+       *   the counter at a specific time.
+       * @path
+       *   /users/{userId}/history/{historyEntryId}
+       * @allow
+       *   A signed-in user (list)s their own history records:
+       *   `auth.uid: "user_abc"`, `path: /users/user_abc/history`
+       * @deny
+       *   A different signed-in user attempts to (delete) a history entry:
+       *   `auth.uid: "user_xyz"`, `path: /users/user_abc/history/entry_123`
+       * @principle
+       *   Enforces document ownership for all operations and validates relational
+       *   integrity by ensuring the denormalized `userId` field is set correctly
+       *   and remains immutable.
+       */
+      match /history/{historyEntryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
