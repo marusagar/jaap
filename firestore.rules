@@ -30,6 +30,8 @@
  * validate ownership directly from the document's data without needing to
  * perform a costly `get` operation on the parent user document. This is a
  * critical performance and security pattern.
+ *
+ * Version: 1.0.1 -- Forcing a refresh of backend configuration.
  */
 rules_version = '2';
 service cloud.firestore {
