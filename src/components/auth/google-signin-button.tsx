@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,10 @@ export function GoogleSignInButton() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
+      const additionalUserInfo = getAdditionalUserInfo(result);
+      
       // Check if the user is new
-      if(result.user.metadata.creationTime === result.user.metadata.lastSignInTime) {
+      if (additionalUserInfo?.isNewUser) {
         await initializeNewUser(db, result.user);
       }
       router.push('/app');
