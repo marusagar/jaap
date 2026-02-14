@@ -192,7 +192,7 @@ export function CounterClient() {
           onClick={handleIncrement}
           aria-label="Increment count"
         >
-          <span className="text-5xl font-bold">JAP</span>
+          <span className="text-5xl font-bold">JAAP</span>
         </Button>
         <Button
           variant="outline"
