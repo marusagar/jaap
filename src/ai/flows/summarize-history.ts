@@ -15,13 +15,13 @@ const HistoryEntrySchema = z.object({
   count: z.number().describe("The number of repetitions in that session."),
 });
 
-export const SummarizeHistoryInputSchema = z.object({
+const SummarizeHistoryInputSchema = z.object({
   history: z.array(HistoryEntrySchema).describe("An array of the user's recent counting sessions."),
   userName: z.string().optional().describe("The user's name, for personalization."),
 });
 export type SummarizeHistoryInput = z.infer<typeof SummarizeHistoryInputSchema>;
 
-export const SummarizeHistoryOutputSchema = z.object({
+const SummarizeHistoryOutputSchema = z.object({
   summary: z.string().describe("A short, encouraging, and personalized summary of the user's practice based on their history. Address the user directly if their name is provided."),
 });
 export type SummarizeHistoryOutput = z.infer<typeof SummarizeHistoryOutputSchema>;
