@@ -1,7 +1,6 @@
 {
   "entities": {
     "UserCounterData": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserCounterData",
       "type": "object",
       "description": "Stores the current counter value, target goal, and last update timestamp for a specific user.",
@@ -32,7 +31,6 @@
       ]
     },
     "CounterHistoryEntry": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CounterHistoryEntry",
       "type": "object",
       "description": "Records a specific counter value at a particular point in time for a user, forming part of the counter history.",
@@ -70,44 +68,17 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserCounterData",
-          "schema": {
-            "$ref": "#/backend/entities/UserCounterData"
-          },
-          "description": "Stores the current counter value, target goal, and last update timestamp for a specific user. The document ID is the user's ID (`userId` wildcard). This path provides direct access to the user's primary counter data, ensuring private ownership and supporting Authorization Independence. The `id` field in the schema is implicitly matched by the document ID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, corresponding to Firebase Authentication's UID."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/UserCounterData"
       },
-      {
-        "path": "/users/{userId}/history/{historyEntryId}",
-        "definition": {
-          "entityName": "CounterHistoryEntry",
-          "schema": {
-            "$ref": "#/backend/entities/CounterHistoryEntry"
-          },
-          "description": "Stores historical counter entries for a specific user. Each document includes the `userId` field for denormalized authorization context, directly supporting Authorization Independence and enabling simple, robust security rules. Access is strictly restricted to the owner of the parent user document, and listing is secure.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user to whom this history entry belongs."
-            },
-            {
-              "name": "historyEntryId",
-              "description": "A unique identifier for each individual counter history entry."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The proposed Firestore structure prioritizes Authorization Independence, Structural Segregation, and clear Access Modeling, in strict adherence to the core design principles. \n\n1.  **User-Specific Counter Data (`/users/{userId}`)**: The `UserCounterData` entity, which represents the user's primary counter, target goal, and last update, is stored directly under the `/users/{userId}` path. This path-based ownership ensures that each user's counter data is private and directly accessible only by them. The document ID for this path is the `userId` itself. \n\n    *   **Authorization Independence**: Access rules can simply check `request.auth.uid == userId` (from the path wildcard). No `get()` calls to other documents are required, making rules atomic, simple, and performant. The `id` field in the `UserCounterData` schema directly corresponds to the document ID, reinforcing this ownership.\n\n2.  **User-Specific Counter History (`/users/{userId}/history/{historyEntryId}`)**: The `CounterHistoryEntry` entities, which record daily counter history, are stored as a subcollection under the corresponding user's document. This extends the hierarchical path for nested, user-owned data.\n\n    *   **Authorization Independence**: Each `CounterHistoryEntry` document explicitly includes a `userId` field, which is a denormalization of the parent user's ID. This critical denormalization (Mandate A) ensures that security rules for history entries do not need to `get()` the parent user document. Rules can verify `request.auth.uid == userId` (from path wildcard) and `request.auth.uid == resource.data.userId` (from the denormalized field), providing robust and independent authorization checks.\n\n**QAPs (Rules are not Filters)**: The structural segregation and path-based ownership ensure that `list` operations are inherently secure. For `/users/{userId}/history`, a user can only query and retrieve history entries where `{userId}` in the path matches their `request.auth.uid`. This means the database is only queried for data the user is authorized to see, eliminating the need for security rules to act as filters (which is inefficient and insecure). For the single `UserCounterData` document at `/users/{userId}`, listing is not applicable; direct access is based on the authenticated user's ID. Overall, the structure ensures that data access is always constrained by the user's identity via the path or denormalized fields, making all `list` operations secure and efficient without relying on rule-based filtering."
+      "description": "Stores the current counter value, target goal, and last update timestamp for a specific user. The document ID is the user's ID (`userId` wildcard). This path provides direct access to the user's primary counter data, ensuring private ownership and supporting Authorization Independence. The `id` field in the schema is implicitly matched by the document ID."
+    },
+    "/users/{userId}/history/{historyEntryId}": {
+      "schema": {
+        "$ref": "#/backend/entities/CounterHistoryEntry"
+      },
+      "description": "Stores historical counter entries for a specific user. Each document includes the `userId` field for denormalized authorization context, directly supporting Authorization Independence and enabling simple, robust security rules. Access is strictly restricted to the owner of the parent user document, and listing is secure."
+    }
   }
 }
