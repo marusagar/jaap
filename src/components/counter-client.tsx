@@ -26,6 +26,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserCounter as nonBlockingUpdate } from '@/lib/firestore';
+import confetti from 'canvas-confetti';
 
 // Debounce function
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -72,6 +73,19 @@ export function CounterClient() {
     setLocalCount(newCount);
     if (user) {
       debouncedUpdate(user.uid, newCount);
+    }
+
+    if (userData && userData.target > 0 && newCount === userData.target) {
+      toast({
+        title: "🎉 Congratulations!",
+        description: `You've reached your target of ${userData.target}!`,
+      });
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.6 },
+        zIndex: 1000,
+      });
     }
 
     if (userData?.settings.vibration) {
@@ -193,15 +207,6 @@ export function CounterClient() {
           aria-label="Increment count"
         >
           <span className="text-5xl font-bold">JAAP</span>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-20 w-20 rounded-full border-2 active:scale-95 transition-transform"
-          onClick={handleReset}
-          aria-label="Reset count and save session"
-        >
-          <RotateCcw className="h-8 w-8" />
         </Button>
       </div>
     </div>
