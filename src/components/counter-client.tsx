@@ -27,6 +27,7 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserCounter as nonBlockingUpdate } from '@/lib/firestore';
 import confetti from 'canvas-confetti';
+import { isBefore, startOfToday } from 'date-fns';
 
 // Debounce function
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -57,6 +58,33 @@ export function CounterClient() {
         setNewTarget(userData.target);
     }
   }, [userData]);
+
+  useEffect(() => {
+    if (user && userData && userData.lastUpdated && db) {
+      const lastUpdatedDate = userData.lastUpdated.toDate();
+      const today = startOfToday();
+
+      if (isBefore(lastUpdatedDate, today) && userData.counter > 0) {
+        addHistoryEntry(db, user.uid, userData.counter)
+          .then(() => {
+            updateUserCounter(db, user.uid, 0);
+            setLocalCount(0);
+            toast({
+              title: "New Day, New Start!",
+              description: `Progress from yesterday (${userData.counter}) saved to history.`,
+            });
+          })
+          .catch((error) => {
+            console.error("Failed to perform daily reset:", error);
+            toast({
+              variant: "destructive",
+              title: "Reset Failed",
+              description: "Could not save yesterday's progress.",
+            });
+          });
+      }
+    }
+  }, [userData, user, db, toast]);
 
 
   const debouncedUpdate = useMemo(
@@ -151,6 +179,10 @@ export function CounterClient() {
     <div className="flex flex-col items-center justify-center p-4 sm:p-8 text-center bg-card rounded-lg shadow-sm">
       <div className="relative w-full max-w-xs sm:max-w-sm mb-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4" />
+              <span className="sr-only">Reset and Save</span>
+          </Button>
           <p className="text-sm text-muted-foreground font-semibold uppercase tracking-widest">
             Target: {userData?.target ?? 0}
           </p>
