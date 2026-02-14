@@ -1,0 +1,69 @@
+'use server';
+/**
+ * @fileOverview A Genkit flow for summarizing a user's counter history.
+ *
+ * - summarizeHistory - A function that generates a personalized summary of the user's practice.
+ * - SummarizeHistoryInput - The input type for the summarizeHistory function.
+ * - SummarizeHistoryOutput - The return type for the summarizeHistory function.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+
+const HistoryEntrySchema = z.object({
+  date: z.string().describe("The date of the session."),
+  count: z.number().describe("The number of repetitions in that session."),
+});
+
+export const SummarizeHistoryInputSchema = z.object({
+  history: z.array(HistoryEntrySchema).describe("An array of the user's recent counting sessions."),
+  userName: z.string().optional().describe("The user's name, for personalization."),
+});
+export type SummarizeHistoryInput = z.infer<typeof SummarizeHistoryInputSchema>;
+
+export const SummarizeHistoryOutputSchema = z.object({
+  summary: z.string().describe("A short, encouraging, and personalized summary of the user's practice based on their history. Address the user directly if their name is provided."),
+});
+export type SummarizeHistoryOutput = z.infer<typeof SummarizeHistoryOutputSchema>;
+
+export async function summarizeHistory(input: SummarizeHistoryInput): Promise<SummarizeHistoryOutput> {
+  return summarizeHistoryFlow(input);
+}
+
+const summaryPrompt = ai.definePrompt({
+  name: 'summarizeHistoryPrompt',
+  input: { schema: SummarizeHistoryInputSchema },
+  output: { schema: SummarizeHistoryOutputSchema },
+  prompt: `You are a kind and encouraging spiritual guide for a user of a Jap Counter app.
+Your task is to provide a short, personalized summary of the user's practice based on their recent activity.
+
+{{#if userName}}
+Address the user as {{userName}}.
+{{/if}}
+
+Here is the user's recent history:
+{{#each history}}
+- On {{date}}, they completed {{count}} repetitions.
+{{/each}}
+
+Analyze their consistency, the totals, and offer gentle encouragement. Keep the summary to 2-3 sentences. Be positive and uplifting.
+If there is no history, provide a simple message encouraging them to start.
+If the user's name is available, use it to make the message more personal.
+`,
+});
+
+const summarizeHistoryFlow = ai.defineFlow(
+  {
+    name: 'summarizeHistoryFlow',
+    inputSchema: SummarizeHistoryInputSchema,
+    outputSchema: SummarizeHistoryOutputSchema,
+  },
+  async (input) => {
+    if (input.history.length === 0) {
+      return { summary: "You have no practice history yet. Start a session to begin your journey!" };
+    }
+
+    const { output } = await summaryPrompt(input);
+    return output!;
+  }
+);
