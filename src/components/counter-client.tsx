@@ -188,11 +188,11 @@ export function CounterClient() {
       <div className="flex items-center justify-center gap-6 w-full max-w-md my-8">
         <Button
           size="icon"
-          className="h-32 w-32 rounded-full shadow-lg active:scale-95 transition-transform bg-primary hover:bg-primary/90"
+          className="h-40 w-40 rounded-full shadow-lg active:scale-95 transition-transform bg-primary hover:bg-primary/90"
           onClick={handleIncrement}
           aria-label="Increment count"
         >
-          <Plus className="h-12 w-12" />
+          <Plus className="h-16 w-16" />
         </Button>
         <Button
           variant="outline"
