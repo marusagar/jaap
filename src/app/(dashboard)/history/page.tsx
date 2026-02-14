@@ -1,42 +1,47 @@
+'use client';
 
 import { HistoryClient } from "@/components/history-client";
-import { getHistory } from "@/lib/firestore";
-import { auth } from "@/lib/firebase";
-import { HistoryEntry } from "@/lib/types";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { unstable_noStore as noStore } from 'next/cache';
 
-async function getHistoryData() {
-    noStore();
-    const user = auth.currentUser;
-    if (!user) {
-        return [];
+export default function HistoryPage() {
+    const { user } = useUser();
+    const db = useFirestore();
+
+    const historyQuery = useMemoFirebase(() => {
+        if (!user) return undefined;
+        return query(
+            collection(db, 'users', user.uid, 'history'),
+            orderBy('date', 'desc'),
+            limit(50)
+        );
+    }, [user, db]);
+
+    const { data: historyData, isLoading } = useCollection(historyQuery);
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Your History</CardTitle>
+                        <CardDescription>
+                            A log of your past counting sessions, with a chart of your recent activity.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex justify-center items-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
-    const history = await getHistory(user.uid);
-    // Serialize date objects for client component
-    return history.map(entry => ({
-        ...entry,
-        date: entry.date.toDate().toISOString(),
-    }));
-}
-
-
-export default async function HistoryPage() {
-    const historyData = await getHistoryData();
 
     return (
         <div className="container mx-auto">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Your History</CardTitle>
-                    <CardDescription>
-                        A log of your past counting sessions, with a chart of your recent activity.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <HistoryClient initialHistory={historyData} />
-                </CardContent>
-            </Card>
+            <HistoryClient history={historyData || []} />
         </div>
     );
 }

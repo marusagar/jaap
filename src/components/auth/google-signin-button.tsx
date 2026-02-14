@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,8 @@ export function GoogleSignInButton() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
 
   const handleSignIn = async () => {
     setIsLoading(true);
@@ -22,7 +24,7 @@ export function GoogleSignInButton() {
       const result = await signInWithPopup(auth, provider);
       // Check if the user is new
       if(result.user.metadata.creationTime === result.user.metadata.lastSignInTime) {
-        await initializeNewUser(result.user);
+        await initializeNewUser(db, result.user);
       }
       router.push('/dashboard');
     } catch (error: any) {

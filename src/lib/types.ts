@@ -8,13 +8,15 @@ export type UserSettings = {
 };
 
 export type UserData = {
+  id: string;
   counter: number;
   target: number;
-  lastUpdated: Timestamp;
+  lastUpdated: any; // Can be Timestamp or FieldValue
   settings: UserSettings;
 };
 
 export type HistoryEntry = {
+  id: string;
   userId: string;
   count: number;
   date: Timestamp;

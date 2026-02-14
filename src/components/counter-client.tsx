@@ -1,10 +1,8 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useAuth } from '@/hooks/use-auth-provider';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { UserData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +25,7 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { updateUserCounter as nonBlockingUpdate } from '@/lib/firestore';
 
 // Debounce function
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -42,36 +40,32 @@ function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
 }
 
 export function CounterClient() {
-  const { user } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { user } = useUser();
+  const db = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : undefined), [user, db]);
+  const { data: userData, isLoading: userLoading } = useDoc<UserData>(userDocRef);
+
   const [localCount, setLocalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [newTarget, setNewTarget] = useState(108);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (userData) {
+        setLocalCount(userData.counter);
+        setNewTarget(userData.target);
+    }
+  }, [userData]);
+
 
   const debouncedUpdate = useMemo(
     () =>
       debounce((userId: string, count: number) => {
-        updateUserCounter(userId, count);
+        nonBlockingUpdate(db, userId, count);
       }, 500),
-    []
+    [db]
   );
 
-  useEffect(() => {
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data() as UserData;
-          setUserData(data);
-          setLocalCount(data.counter);
-          setNewTarget(data.target);
-        }
-        setLoading(false);
-      });
-      return () => unsubscribe();
-    }
-  }, [user]);
 
   const handleInteraction = (type: 'increment' | 'decrement') => {
     const newCount = type === 'increment' ? localCount + 1 : localCount - 1;
@@ -111,9 +105,9 @@ export function CounterClient() {
   };
 
   const handleReset = async () => {
-    if (user && localCount > 0) {
-      await addHistoryEntry(user.uid, localCount);
-      await updateUserCounter(user.uid, 0);
+    if (user && localCount > 0 && db) {
+      await addHistoryEntry(db, user.uid, localCount);
+      await updateUserCounter(db, user.uid, 0);
       setLocalCount(0);
       toast({ title: 'Progress Saved', description: `Your session of ${localCount} has been saved to history.` });
     } else if (localCount === 0) {
@@ -122,8 +116,8 @@ export function CounterClient() {
   };
 
   const handleTargetUpdate = async () => {
-    if (user && newTarget > 0) {
-      await updateUserTarget(user.uid, newTarget);
+    if (user && newTarget > 0 && db) {
+      await updateUserTarget(db, user.uid, newTarget);
       toast({ title: 'Target Updated', description: `Your new target is ${newTarget}.` });
     }
   };
@@ -133,7 +127,7 @@ export function CounterClient() {
       ? (localCount / userData.target) * 100
       : 0;
 
-  if (loading) {
+  if (userLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

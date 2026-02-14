@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useAuth } from '@/hooks/use-auth-provider';
+import { useUser, useAuth } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import {
@@ -16,7 +15,6 @@ import {
   SidebarCollapse,
 } from '@/components/ui/sidebar';
 import { Home, Settings, History, LogOut, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,15 +30,16 @@ export function DashboardLayoutClient({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -53,7 +52,7 @@ export function DashboardLayoutClient({
     { href: '/dashboard/settings', label: 'Settings', icon: Settings },
   ];
 
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

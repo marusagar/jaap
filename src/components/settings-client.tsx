@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth-provider';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { UserData, UserSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Loader2, BellRing } from 'lucide-react';
@@ -17,46 +16,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTheme } from './theme-provider';
+import { useTheme } from 'next-themes';
 import { updateUserSettings } from '@/lib/firestore';
 import { getReminderSuggestion } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 
 export function SettingsClient() {
-  const { user } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { user } = useUser();
+  const db = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : undefined), [user, db]);
+  const { data: userData, isLoading: userLoading } = useDoc<UserData>(userDocRef);
+  
   const [settings, setSettings] = useState<Partial<UserSettings>>({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data() as UserData;
-          setUserData(data);
-          setSettings(data.settings);
-          setTheme(data.settings.theme || 'system');
-        }
-        setLoading(false);
-      });
-      return () => unsubscribe();
+    if (userData) {
+      setSettings(userData.settings);
+      setTheme(userData.settings.theme || 'system');
     }
-  }, [user, setTheme]);
+  }, [userData, setTheme]);
 
   const handleSettingsChange = (key: keyof UserSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
-    if (user && settings) {
+    if (user && settings && db) {
       setSaving(true);
-      await updateUserSettings(user.uid, settings);
+      await updateUserSettings(db, user.uid, settings);
       if(settings.theme) {
         setTheme(settings.theme)
       }
@@ -73,7 +66,7 @@ export function SettingsClient() {
     setAiLoading(true);
 
     const now = new Date();
-    const lastActivityDate = userData.lastUpdated.toDate();
+    const lastActivityDate = userData.lastUpdated?.toDate ? userData.lastUpdated.toDate() : new Date();
     const hoursSinceLastActivity = (now.getTime() - lastActivityDate.getTime()) / (1000 * 60 * 60);
 
     const res = await getReminderSuggestion({
@@ -98,7 +91,7 @@ export function SettingsClient() {
     setAiLoading(false);
   }
 
-  if (loading) {
+  if (userLoading) {
     return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin text-primary" />;
   }
 
@@ -140,7 +133,7 @@ export function SettingsClient() {
           </Label>
           <Switch
             id="sound"
-            checked={settings.sound}
+            checked={!!settings.sound}
             onCheckedChange={(checked) => handleSettingsChange('sound', checked)}
           />
         </div>
@@ -153,7 +146,7 @@ export function SettingsClient() {
           </Label>
           <Switch
             id="vibration"
-            checked={settings.vibration}
+            checked={!!settings.vibration}
             onCheckedChange={(checked) => handleSettingsChange('vibration', checked)}
           />
         </div>

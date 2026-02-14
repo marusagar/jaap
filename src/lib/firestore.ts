@@ -1,69 +1,63 @@
 import {
   doc,
   setDoc,
-  getDoc,
   serverTimestamp,
   collection,
   addDoc,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  limit
+  updateDoc,
+  Firestore,
 } from 'firebase/firestore';
-import { db } from './firebase';
 import type { User } from 'firebase/auth';
-import type { UserData, HistoryEntry } from './types';
+import type { UserData, UserSettings } from './types';
 
-export const initializeNewUser = async (user: User) => {
+// These functions are now designed to be called from client components that have access to the Firestore instance.
+
+export const initializeNewUser = (db: Firestore, user: User) => {
   const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists()) {
-    const newUser: UserData = {
-      counter: 0,
-      target: 108,
-      lastUpdated: serverTimestamp() as any, // Will be converted by Firestore
-      settings: {
-        vibration: true,
-        sound: true,
-        notifications: 'regular',
-        theme: 'system',
-      },
-    };
-    await setDoc(userRef, newUser);
-  }
+  const newUser: Omit<UserData, 'lastUpdated' | 'id'> = {
+    counter: 0,
+    target: 108,
+    settings: {
+      vibration: true,
+      sound: true,
+      notifications: 'regular',
+      theme: 'system',
+    },
+  };
+  return setDoc(userRef, {
+    ...newUser,
+    id: user.uid,
+    lastUpdated: serverTimestamp(),
+  });
 };
 
-export const updateUserCounter = async (userId: string, counter: number) => {
+export const updateUserCounter = (db: Firestore, userId: string, counter: number) => {
   const userRef = doc(db, 'users', userId);
-  await setDoc(userRef, { counter, lastUpdated: serverTimestamp() }, { merge: true });
+  return updateDoc(userRef, { counter, lastUpdated: serverTimestamp() });
 };
 
-export const updateUserTarget = async (userId:string, target: number) => {
+export const updateUserTarget = (db: Firestore, userId:string, target: number) => {
     const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, { target }, { merge: true });
+    return updateDoc(userRef, { target });
 }
 
-export const updateUserSettings = async (userId: string, settings: Partial<UserData['settings']>) => {
+export const updateUserSettings = (db: Firestore, userId: string, settings: Partial<UserSettings>) => {
   const userRef = doc(db, 'users', userId);
-  await setDoc(userRef, { settings }, { merge: true });
+  // To merge only settings, we need to use dot notation for nested objects
+  const settingsUpdate: { [key: string]: any } = {};
+  for (const [key, value] of Object.entries(settings)) {
+    settingsUpdate[`settings.${key}`] = value;
+  }
+  return updateDoc(userRef, settingsUpdate);
 };
 
-export const addHistoryEntry = async (userId: string, count: number) => {
-  if (count === 0) return;
-  const historyCollection = collection(db, 'history');
-  const newEntry: HistoryEntry = {
+export const addHistoryEntry = (db: Firestore, userId: string, count: number) => {
+  if (count === 0) return Promise.resolve();
+  const historyCollection = collection(db, 'users', userId, 'history');
+  const newEntry = {
     userId,
     count,
-    date: serverTimestamp() as any,
+    date: serverTimestamp(),
   };
-  await addDoc(historyCollection, newEntry);
-};
-
-export const getHistory = async (userId: string): Promise<HistoryEntry[]> => {
-  const historyCollection = collection(db, 'history');
-  const q = query(historyCollection, where('userId', '==', userId), orderBy('date', 'desc'), limit(50));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => doc.data() as HistoryEntry);
+  return addDoc(historyCollection, newEntry);
 };
