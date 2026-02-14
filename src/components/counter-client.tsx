@@ -207,7 +207,7 @@ export function CounterClient() {
                     id="target"
                     type="number"
                     value={newTarget}
-                    onChange={(e) => setNewTarget(parseInt(e.target.value, 10))}
+                    onChange={(e) => setNewTarget(parseInt(e.target.value, 10) || 0)}
                     className="col-span-3"
                   />
                 </div>
